@@ -158,34 +158,26 @@ Resources:
                   return {"statusCode": 404, "body": "OU ID not found"}
               logger.info(f"Retrieved source OU ID: {source_ou_id}")
               
-              # Modify the event payload structure
+              # Construct the event payload
               event_payload = {
                   'Source': 'lambda.BudgetAlertForwarder',
                   'DetailType': 'Budget Alert',
-                  'Detail': {
+                  'Detail': json.dumps({
                       'account_id': account_id,
                       'source_ou_id': source_ou_id
-                  },
+                  }),
                   'EventBusName': central_event_bus_arn
               }
               
-              # Convert the entire payload to JSON string before sending
-              payload_to_send = json.dumps(event_payload)
-              
               # Log the full event payload for debugging
-              logger.info(f"Full event payload being sent to EventBridge: {payload_to_send}")
+              logger.info(f"Full event payload being sent to EventBridge: {event_payload}")
               
               # Instantiate the EventBridge client
               eventbridge_client = boto3.client('events')
               
               # Send the event to the central EventBridge bus
               response = eventbridge_client.put_events(
-                  Entries=[{
-                      'Source': event_payload['Source'],
-                      'DetailType': event_payload['DetailType'],
-                      'Detail': json.dumps(event_payload['Detail']),
-                      'EventBusName': event_payload['EventBusName']
-                  }]
+                  Entries=[event_payload]
               )
               
               logger.info(f"Event sent to EventBridge: {response}")
