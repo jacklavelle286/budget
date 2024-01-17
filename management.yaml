@@ -90,22 +90,29 @@ Resources:
     
       Code:
         ZipFile: |
-          import boto3
           import json
-          import os
           import logging
+          import boto3
+          import os
 
+          # Setting up logging
           logger = logging.getLogger()
           logger.setLevel(logging.INFO)
 
           def lambda_handler(event, context):
               logger.info(f"Received event: {json.dumps(event)}")
 
-              # Access detail directly (it's already a dictionary)
-              detail = event.get('detail')
-              if not detail:
+              # Parse the 'Detail' field from the event
+              detail_str = event.get('detail')
+              if not detail_str:
                   logger.error("Missing 'detail' field in the event.")
                   return {"statusCode": 400, "body": "Invalid event format"}
+
+              try:
+                  detail = json.loads(detail_str)
+              except json.JSONDecodeError:
+                  logger.error("Error parsing 'detail' field.")
+                  return {"statusCode": 400, "body": "Invalid 'detail' format"}
 
               account_id = detail.get('account_id')
               source_ou_id = detail.get('source_ou_id')
@@ -114,12 +121,10 @@ Resources:
                   logger.error("Missing account_id or source_ou_id in the event detail.")
                   return {"statusCode": 400, "body": "Invalid event detail"}
 
-
-              client = boto3.client('organizations')
-
               # Specify the Deny All SCP ID (You need to replace this with the actual SCP ID)
               deny_all_scp_id = os.environ['SCPId']
 
+              client = boto3.client('organizations')
 
               try:
                   # Attach the Deny All SCP to the source OU
@@ -133,8 +138,7 @@ Resources:
                   logger.error(f"Error in attaching SCP: {str(e)}")
                   return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
 
-
-
+          # Additional helper functions (if any)...
       Handler: index.lambda_handler
       Role: !GetAtt LambdaRole.Arn
       Runtime: python3.11
@@ -166,6 +170,8 @@ Resources:
       EventPattern:
         source:
           - "lambda.BudgetAlertForwarder"
+        detail-type:
+          - "Budget Alert"
       State: "ENABLED"
       Targets:
         - Arn: !GetAtt AccountMover.Arn
