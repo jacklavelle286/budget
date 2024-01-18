@@ -140,10 +140,6 @@ Resources:
       Runtime: python3.11
       Timeout: 300
 
-  sqsQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: dlq
 
   BudgetRestrictorEventBus:
     Type: AWS::Events::EventBus
@@ -178,8 +174,6 @@ Resources:
       Targets:
         - Arn: !GetAtt AccountMover.Arn
           Id: "AccountMoverTarget"
-          DeadLetterConfig:
-            Arn: !GetAtt sqsQueue.Arn
 
   SNSTopic:
     Type: AWS::SNS::Topic
