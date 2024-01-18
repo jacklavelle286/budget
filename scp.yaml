@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: 2010-09-09
+  
+Resources:
+  DenyAllSCP:
+    DeletionPolicy: Retain
+    Type: AWS::Organizations::Policy
+    Properties:
+      Type: SERVICE_CONTROL_POLICY
+      Name: SCPDenyAll
+      Content:
+        Version: 2012-10-17
+        Statement:
+          - Sid: SCPDenyall
+            Effect: Deny
+            Action:
+              - '*'
+            Resource: '*'
