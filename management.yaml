@@ -144,7 +144,6 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: dlq
-      FifoQueue: false
 
   BudgetRestrictorEventBus:
     Type: AWS::Events::EventBus
